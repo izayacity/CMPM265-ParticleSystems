@@ -7,26 +7,27 @@ int main () {
 	const int gameWidth = 800;
 	const int gameHeight = 600;
 	// create the window
-	sf::RenderWindow window1 (sf::VideoMode (gameWidth, gameHeight), "ParticleSys1");
-	//sf::RenderWindow window2 (sf::VideoMode (gameWidth, gameHeight), "ParticleSys2");
+	sf::RenderWindow window1 (sf::VideoMode (gameWidth, gameHeight), "ParticleSys");
 
 	// create the particle system
-	ParticleSystem particles1;
-	ParticleSystem particles2;
+	ParticleSystem particles1;    // particle sys 1: emitter changed by mouse cursor
+	ParticleSystem particles2;    // particle sys 2: emitter at (gameWidth / 2.f, 0.f), angle [135, 225], gravity enabled, textured
 
 	// create a clock to track the elapsed time
 	sf::Clock clock;
-	sf::Clock clock2;
 
+	// load fonts
+	sf::Font fontHNL;
+	assert (fontHNL.loadFromFile ("static/font/HelveticaNeue Light.ttf"));
+
+	// draw the background of text field
 	sf::RectangleShape textField;
 	textField.setFillColor (sf::Color::Black);
 	textField.setSize (sf::Vector2f (800.f, 30.f));
 	textField.setPosition (0, gameHeight - 30);
 
-	// load fonts
-	sf::Font fontHNL;	
-	assert (fontHNL.loadFromFile ("static/font/HelveticaNeue Light.ttf"));
-
+	// TODO: Simulate text box input by text cursor
+	// display the text
 	sf::Text countText;
 	countText.setFont (fontHNL);
 	countText.setCharacterSize (20);
@@ -54,40 +55,27 @@ int main () {
 			}
 		}
 
-		// * make the particle system emitter follow the mouse
+		// set the position of particle emitter
 		sf::Vector2i mouse = sf::Mouse::getPosition (window1);
 		particles1.setEmitter (window1.mapPixelToCoords (mouse));
+		particles2.setEmitter (sf::Vector2f (gameWidth / 2.f, 0.f));
+		particles2.setEmitAngle (120);
+		particles2.setEmitStart (120.f);
+		particles2.setLifetime (10);
+		particles2.setSpeed (125.f);
 
 		// update the particle system by time
 		sf::Time elapsed = clock.restart ();
 		particles1.update (elapsed);
+		particles2.update (elapsed);
 
 		// render it
 		window1.clear ();
+		window1.draw (particles2);
 		window1.draw (particles1);
 		window1.draw (textField);
 		window1.draw (countText);
 		window1.display ();
-
-		/*
-		Window2
-		*/
-		// handle events
-		//sf::Event event2;
-		//while (window2.pollEvent (event2)) {
-		//	switch (event.type) {
-		//	case sf::Event::Closed:
-		//		window1.close ();
-		//		break;
-		//	//case sf::Event::KeyPressed:
-
-		//	}
-		//}
-
-		//// render it
-		//window2.clear ();
-		////window2.draw (terminal);
-		//window2.display ();
 	}
 
 	return 0;
