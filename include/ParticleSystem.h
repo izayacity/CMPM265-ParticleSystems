@@ -69,7 +69,7 @@ public:
 	}
 
 	// Set the max life time of the particles
-	void setLifetime (int lifetime) {
+	void setLifetime (float lifetime) {
 		m_lifetime = sf::seconds (lifetime);
 	}
 
@@ -110,7 +110,10 @@ public:
 				resetParticle (i);
 
 			// update the position of the corresponding vertex
-			m_vertices[i].position += p.velocity * elapsed.asSeconds ();
+			float prevVelocity = p.velocity.y;
+			p.velocity.y += m_gravity * elapsed.asSeconds ();
+			m_vertices[i].position.x += p.velocity.x * elapsed.asSeconds ();
+			m_vertices[i].position.y += (p.velocity.y + prevVelocity) / 2 * elapsed.asSeconds ();
 
 			// update the alpha (transparency) of the particle according to its lifetime
 			float ratio = p.lifetime.asSeconds () / m_lifetime.asSeconds ();

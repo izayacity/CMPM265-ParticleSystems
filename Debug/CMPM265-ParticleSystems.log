@@ -1,4 +1,3 @@
 ﻿  main.cpp
-d:\_repos\cmpm265\cmpm265-particlesystems\include\particlesystem.h(73): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
   CMPM265-ParticleSystems.vcxproj -> D:\_repos\CMPM265\CMPM265-ParticleSystems\Debug\CMPM265-ParticleSystems.exe
   CMPM265-ParticleSystems.vcxproj -> D:\_repos\CMPM265\CMPM265-ParticleSystems\Debug\CMPM265-ParticleSystems.pdb (Full PDB)

@@ -1,13 +1,17 @@
 #include <SFML/Graphics.hpp>
 #include <string>
 #include <cassert>
+#include <ctime>
+#include <cstdlib>
 #include "../include/ParticleSystem.h"
 
 int main () {
 	const int gameWidth = 800;
 	const int gameHeight = 600;
 	// create the window
-	sf::RenderWindow window1 (sf::VideoMode (gameWidth, gameHeight), "ParticleSys");
+	sf::RenderWindow window1 (sf::VideoMode (gameWidth, gameHeight), "ParticleSys");	
+	window1.setFramerateLimit (60); // call it once, after creating the window
+	std::srand (static_cast<unsigned int>(std::time (NULL)));
 
 	// create the particle system
 	ParticleSystem particles1;    // particle sys 1: emitter changed by mouse cursor
@@ -23,7 +27,7 @@ int main () {
 	// draw the background of text field
 	sf::RectangleShape textField;
 	textField.setFillColor (sf::Color::Black);
-	textField.setSize (sf::Vector2f (800.f, 30.f));
+	textField.setSize (sf::Vector2f (gameWidth + 0.f, 30.f));
 	textField.setPosition (0, gameHeight - 30);
 
 	// TODO: Simulate text box input by text cursor
@@ -36,6 +40,13 @@ int main () {
 	countText.setString ("Particle count (Use UP/DOWN key to change): " + countStr);
 	countText.setPosition (20, gameHeight - 30);
 	
+	// init particle sys 2
+	particles2.setEmitAngle (120);
+	particles2.setEmitStart (120.f);
+	particles2.setLifetime (10);
+	particles2.setSpeed (50.f);
+	particles2.setGravity (100.f);
+
 	// run the main loop
 	while (window1.isOpen ()) {
 		// handle events
@@ -55,14 +66,10 @@ int main () {
 			}
 		}
 
-		// set the position of particle emitter
+		// set the emitter of particle sys 1 by mouse cursors
 		sf::Vector2i mouse = sf::Mouse::getPosition (window1);
 		particles1.setEmitter (window1.mapPixelToCoords (mouse));
-		particles2.setEmitter (sf::Vector2f (gameWidth / 2.f, 0.f));
-		particles2.setEmitAngle (120);
-		particles2.setEmitStart (120.f);
-		particles2.setLifetime (10);
-		particles2.setSpeed (125.f);
+		particles2.setEmitter (sf::Vector2f (gameWidth / 2.f, 0.f));		
 
 		// update the particle system by time
 		sf::Time elapsed = clock.restart ();
