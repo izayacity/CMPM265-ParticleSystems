@@ -29,4 +29,9 @@
       <Filter>Resource Files</Filter>
     </Font>
   </ItemGroup>
+  <ItemGroup>
+    <Image Include="static\image\smokeparticle.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+  </ItemGroup>
 </Project>

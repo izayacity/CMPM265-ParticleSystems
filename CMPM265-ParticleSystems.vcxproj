@@ -156,6 +156,9 @@
   <ItemGroup>
     <Font Include="static\font\HelveticaNeue Light.ttf" />
   </ItemGroup>
+  <ItemGroup>
+    <Image Include="static\image\smokeparticle.png" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

@@ -15,7 +15,7 @@ int main () {
 
 	// create the particle system
 	ParticleSystem particles1;    // particle sys 1: emitter changed by mouse cursor
-	ParticleSystem particles2;    // particle sys 2: emitter at (gameWidth / 2.f, 0.f), angle [135, 225], gravity enabled, textured
+	ParticleSystem particles2;    // particle sys 2: emitter at [gameWidth / 2.f, 0.f], angle [120, 240], gravity = 100, textured
 
 	// create a clock to track the elapsed time
 	sf::Clock clock;
@@ -41,11 +41,14 @@ int main () {
 	countText.setPosition (20, gameHeight - 30);
 	
 	// init particle sys 2
+	particles2.setEmitter (sf::Vector2f (gameWidth / 2.f, 10.f));
 	particles2.setEmitAngle (120);
 	particles2.setEmitStart (120.f);
 	particles2.setLifetime (10);
 	particles2.setSpeed (50.f);
 	particles2.setGravity (100.f);
+	particles2.setSize (2.f);
+	//particles2.loadTexture ("static/image/smokeparticle.png");
 
 	// run the main loop
 	while (window1.isOpen ()) {
@@ -68,8 +71,7 @@ int main () {
 
 		// set the emitter of particle sys 1 by mouse cursors
 		sf::Vector2i mouse = sf::Mouse::getPosition (window1);
-		particles1.setEmitter (window1.mapPixelToCoords (mouse));
-		particles2.setEmitter (sf::Vector2f (gameWidth / 2.f, 0.f));		
+		particles1.setEmitter (window1.mapPixelToCoords (mouse));				
 
 		// update the particle system by time
 		sf::Time elapsed = clock.restart ();

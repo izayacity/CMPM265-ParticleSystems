@@ -1,11 +1,13 @@
 #pragma once
 #include <SFML/Graphics.hpp>
+#include <iostream>
 
 class ParticleSystem : public sf::Drawable, public sf::Transformable {
 private:
 	struct Particle {
 		sf::Vector2f velocity;
 		sf::Time lifetime;
+		sf::VertexArray vertices;    // quad shape array with 4 vertices around the particle as a sprite to load texture
 	};
 
 	// default initial count of particles
@@ -20,15 +22,23 @@ private:
 	float m_emitStart;
 	// min speed
 	float m_speed;
+	// radius/size of particle/sprite
+	float m_size;
+	// to suggest whether texture is loaded
+	bool textureLoaded;
 
 	// Particle STD vector storing the velocity and life time
 	std::vector<Particle> m_particles;
-	// SFML Vertex Array storing point shape
+	// SFML Vertex Array storing particle origin center position
 	sf::VertexArray m_vertices;
 	// Life time of particles
 	sf::Time m_lifetime;
 	// Emitter position
 	sf::Vector2f m_emitter;
+	// A unique ID, which represents the type of system (smoke or sparks, for example).
+	int sysType;
+	// render states to load texture
+	sf::Texture m_texture;
 
 	// Move the particle after respawning each time by the initial velocity and angle
 	void resetParticle (std::size_t index) {
@@ -41,6 +51,13 @@ private:
 		// reset the position of the corresponding vertex
 		m_vertices[index].position = m_emitter;
 		m_vertices[index].color = sf::Color::Color (std::rand () % 255, std::rand () % 255, std::rand () % 255, std::rand () % 255);
+
+		if (textureLoaded) {
+			m_particles[index].vertices[0].position = m_emitter + sf::Vector2f (-m_size, -m_size);
+			m_particles[index].vertices[1].position = m_emitter + sf::Vector2f (m_size, -m_size);
+			m_particles[index].vertices[2].position = m_emitter + sf::Vector2f (-m_size, m_size);
+			m_particles[index].vertices[3].position = m_emitter + sf::Vector2f (m_size, m_size);
+		}
 	}
 
 	// Apply the transform and draw the vertext array
@@ -48,11 +65,17 @@ private:
 		// apply the transform
 		states.transform *= getTransform ();
 
-		// our particles don't use a texture
-		states.texture = NULL;
+		if (textureLoaded) {
+			states.texture = &m_texture;
 
-		// draw the vertex array
-		target.draw (m_vertices, states);
+			for (std::size_t i = 0; i < m_particles.size (); ++i) {
+				//target.draw (m_particles[i].vertices, states);
+				target.draw (m_particles[i].vertices, &m_texture);
+			}			
+		} else {
+			states.texture = NULL;
+			target.draw (m_vertices, states);
+		}	
 	}
 
 public:
@@ -65,8 +88,10 @@ public:
 		m_gravity (0.f),
 		m_emitAngle (360),
 		m_emitStart (0.f),
-		m_speed (50.f) {
-	}
+		m_speed (50.f),
+		m_size (0.f),
+		textureLoaded (false) {
+	}	
 
 	// Set the max life time of the particles
 	void setLifetime (float lifetime) {
@@ -98,6 +123,24 @@ public:
 		m_speed = speed;
 	}
 
+	// Set particle/sprite size
+	void setSize (float size) {
+		m_size = size;
+	}
+
+	// load texture
+	void loadTexture (const std::string& tileset) {
+		if (m_texture.loadFromFile (tileset)) {
+			m_texture.setSmooth (true);
+			textureLoaded = true;
+
+			for (std::size_t i = 0; i < m_particles.size (); ++i)
+				setupShape (i);
+		} else {
+			textureLoaded = false;
+		}			
+	}
+
 	// Update the lifetime, position, color, etc of the particles
 	void update (sf::Time elapsed) {
 		for (std::size_t i = 0; i < m_particles.size (); ++i) {
@@ -118,6 +161,15 @@ public:
 			// update the alpha (transparency) of the particle according to its lifetime
 			float ratio = p.lifetime.asSeconds () / m_lifetime.asSeconds ();
 			m_vertices[i].color.a = static_cast<sf::Uint8>(ratio * 255);
+
+			// update surrending vertices of shape
+			if (textureLoaded) {
+				sf::Vector2f m_pos = m_vertices[i].position;
+				m_particles[i].vertices[0].position = m_pos + sf::Vector2f (-m_size, -m_size);
+				m_particles[i].vertices[1].position = m_pos + sf::Vector2f (m_size, -m_size);
+				m_particles[i].vertices[2].position = m_pos + sf::Vector2f (-m_size, m_size);
+				m_particles[i].vertices[3].position = m_pos + sf::Vector2f (m_size, m_size);
+			}			
 		}
 	}
 
@@ -139,7 +191,7 @@ public:
 		// update particles and vertice
 		m_vertices.resize (m_count + diff);
 		m_particles.resize (m_count + diff);
-		m_count = m_vertices.getVertexCount ();
+		m_count = m_particles.size ();
 	}
 
 	// reduce the count of particles by 100 each time
@@ -155,6 +207,26 @@ public:
 		// update particles and vertice
 		m_vertices.resize (m_count - diff);
 		m_particles.resize (m_count - diff);
-		m_count = m_vertices.getVertexCount ();
+		m_count = m_particles.size ();
+	}
+
+	// set particle system type
+	void setSysType (int type) {
+		sysType = type;
+	}
+
+	// build the sprite/quad vertices around the particle
+	void setupShape (std::size_t index) {		
+		float width = m_texture.getSize ().x / 2.f < m_size ? m_texture.getSize ().x / 2.f : m_size;
+		float height = m_texture.getSize ().y / 2.f < m_size ? m_texture.getSize ().y / 2.f : m_size;
+
+		m_particles[index].vertices.setPrimitiveType (sf::PrimitiveType::Quads);
+		m_particles[index].vertices.resize (4);
+		
+		sf::Vector2f t_pos = sf::Vector2f (width, height);
+		m_particles[index].vertices[0].texCoords = t_pos + sf::Vector2f (-width, -height);
+		m_particles[index].vertices[1].texCoords = t_pos + sf::Vector2f (width, -height);
+		m_particles[index].vertices[2].texCoords = t_pos + sf::Vector2f (-width, height);
+		m_particles[index].vertices[3].texCoords = t_pos + sf::Vector2f (width, height);
 	}
 };
