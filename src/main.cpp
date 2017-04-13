@@ -48,7 +48,8 @@ int main () {
 	particles2.setSpeed (50.f);
 	particles2.setGravity (100.f);
 	particles2.setSize (2.f);
-	//particles2.loadTexture ("static/image/smokeparticle.png");
+	particles2.init ();
+	particles1.init ();
 
 	// run the main loop
 	while (window1.isOpen ()) {
