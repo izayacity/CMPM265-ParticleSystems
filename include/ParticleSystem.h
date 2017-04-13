@@ -11,13 +11,14 @@ private:
 		sf::Vector2f velocity;
 		sf::Time lifetime;
 		sf::VertexArray vertices;    // particle origin center vertex and surrounding 4 vertices as a sprite to load texture
-		sf::VertexArray history;
+		sf::VertexArray history;     // trail vertices
+		std::vector<sf::Time> h_time;    // history life time of trail vertices
 		Particle () : lifetime (sf::seconds (3)), vertices (sf::Points, 5) {}
 	};
 	typedef std::shared_ptr<Particle> ParticlePtr;
-	std::vector<ParticlePtr> m_particles;
 	typedef std::vector<ParticlePtr>::iterator ParticleIterator;
-	
+	std::vector<ParticlePtr> m_particles;	
+
 	// default initial count of particles
 	const int COUNT = 100;
 	// count of particles
@@ -50,11 +51,11 @@ private:
 		float speed = (std::rand () % 50) + m_speed;
 		m_particles[index]->velocity = sf::Vector2f (std::cos (angle) * speed, std::sin (angle) * speed);
 		m_particles[index]->lifetime = sf::milliseconds ((std::rand () % (m_lifetime.asMilliseconds () / 2)) + m_lifetime.asMilliseconds () / 2);
+		m_particles[index]->history.resize (0);
+		m_particles[index]->h_time.clear ();
 
 		// reset the position of the corresponding vertex
 		m_particles[index]->vertices[0].position = m_emitter;
-		m_particles[index]->vertices[0].color = sf::Color::Color (std::rand () % 255, std::rand () % 255, std::rand () % 255, std::rand () % 255);
-		
 		m_particles[index]->vertices[1].position = m_emitter + sf::Vector2f (-m_size, -m_size);
 		m_particles[index]->vertices[2].position = m_emitter + sf::Vector2f (m_size, -m_size);
 		m_particles[index]->vertices[3].position = m_emitter + sf::Vector2f (-m_size, m_size);
@@ -67,11 +68,10 @@ private:
 		float speed = (std::rand () % 50) + m_speed;
 		particle->velocity = sf::Vector2f (std::cos (angle) * speed, std::sin (angle) * speed);
 		particle->lifetime = sf::milliseconds ((std::rand () % (m_lifetime.asMilliseconds () / 2)) + m_lifetime.asMilliseconds () / 2);
+		particle->history.resize (0);
 
 		// reset the position of the corresponding vertex
 		particle->vertices[0].position = m_emitter;
-		particle->vertices[0].color = sf::Color::Color (std::rand () % 255, std::rand () % 255, std::rand () % 255, std::rand () % 255);
-
 		particle->vertices[1].position = m_emitter + sf::Vector2f (-m_size, -m_size);
 		particle->vertices[2].position = m_emitter + sf::Vector2f (m_size, -m_size);
 		particle->vertices[3].position = m_emitter + sf::Vector2f (-m_size, m_size);
@@ -81,10 +81,11 @@ private:
 	// Apply the transform and draw the vertext array
 	virtual void draw (sf::RenderTarget& target, sf::RenderStates states) const {
 		states.transform *= getTransform ();
-		states.texture = &m_texture;
+		states.texture = NULL;
 		
 		for (std::size_t i = 0; i < m_particles.size (); ++i) {
-			target.draw (m_particles[i]->vertices, states);
+			target.draw (m_particles[i]->vertices, &m_texture);
+			target.draw (m_particles[i]->history, states);
 		}
 	}
 
@@ -145,26 +146,27 @@ public:
 	// Update the lifetime, position, color, etc of the particles
 	void update (sf::Time elapsed) {
 		for (std::size_t i = 0; i < m_particles.size (); ++i) {
-			// update the particle lifetime
-			Particle& p = *m_particles[i];
-			p.lifetime -= elapsed;
+			m_particles[i]->lifetime -= elapsed;
 
 			// if the particle is dead, respawn it
-			if (p.lifetime <= sf::Time::Zero) {
+			if (m_particles[i]->lifetime <= sf::Time::Zero) {
 				resetParticle (i);
 				return;
 			}
 
+			// store the history positions and life time of a particle
+			float prevVelocity = m_particles[i]->velocity.y;
+			sf::Vertex *vertex = new sf::Vertex ();
+			vertex->color = sf::Color::Color (std::rand () % 255, std::rand () % 255, std::rand () % 255, std::rand () % 255);
+			vertex->position = m_particles[i]->vertices[0].position;
+			m_particles[i]->history.append (*vertex);
+			m_particles[i]->h_time.push_back (m_particles[i]->lifetime);
+
 			// update the position of the corresponding vertex
-			float prevVelocity = p.velocity.y;
-			p.velocity.y += m_gravity * elapsed.asSeconds ();
-			m_particles[i]->vertices[0].position.x += p.velocity.x * elapsed.asSeconds ();
-			m_particles[i]->vertices[0].position.y += (p.velocity.y + prevVelocity) / 2 * elapsed.asSeconds ();
-
-			// update the alpha (transparency) of the particle according to its lifetime
-			float ratio = p.lifetime.asSeconds () / m_lifetime.asSeconds ();
-			m_particles[i]->vertices[0].color.a = static_cast<sf::Uint8>(ratio * 255);
-
+			m_particles[i]->velocity.y += m_gravity * elapsed.asSeconds ();
+			m_particles[i]->vertices[0].position.x += m_particles[i]->velocity.x * elapsed.asSeconds ();
+			m_particles[i]->vertices[0].position.y += (m_particles[i]->velocity.y + prevVelocity) / 2 * elapsed.asSeconds ();
+			
 			// update surrending vertices of shape
 			sf::Vector2f m_pos = m_particles[i]->vertices[0].position;
 			m_particles[i]->vertices[1].position = m_pos + sf::Vector2f (-m_size, -m_size);
@@ -203,7 +205,6 @@ public:
 				throw std::runtime_error ("Failed to add particle");
 			}
 		}
-
 	}
 
 	// reduce the count of particles by 100 each time
