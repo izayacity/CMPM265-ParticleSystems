@@ -1,5 +1,5 @@
 ﻿  main.cpp
-d:\_repos\cmpm265\cmpm265-particlesystems\include\particlesystem.h(216): warning C4244: 'initializing': conversion from 'unsigned int' to 'float', possible loss of data
-d:\_repos\cmpm265\cmpm265-particlesystems\include\particlesystem.h(217): warning C4244: 'initializing': conversion from 'unsigned int' to 'float', possible loss of data
+d:\_repos\cmpm265\cmpm265-particlesystems\include\particlesystem.h(218): warning C4244: 'initializing': conversion from 'unsigned int' to 'float', possible loss of data
+d:\_repos\cmpm265\cmpm265-particlesystems\include\particlesystem.h(219): warning C4244: 'initializing': conversion from 'unsigned int' to 'float', possible loss of data
   CMPM265-ParticleSystems.vcxproj -> D:\_repos\CMPM265\CMPM265-ParticleSystems\Debug\CMPM265-ParticleSystems.exe
   CMPM265-ParticleSystems.vcxproj -> D:\_repos\CMPM265\CMPM265-ParticleSystems\Debug\CMPM265-ParticleSystems.pdb (Full PDB)

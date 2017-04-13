@@ -55,10 +55,10 @@ private:
 		m_vertices[index].color = sf::Color::Color (std::rand () % 255, std::rand () % 255, std::rand () % 255, std::rand () % 255);
 
 		if (textureLoaded) {
-			m_particles[index]->vertices[0].position = m_emitter + sf::Vector2f (-m_size, -m_size);
-			m_particles[index]->vertices[1].position = m_emitter + sf::Vector2f (m_size, -m_size);
-			m_particles[index]->vertices[2].position = m_emitter + sf::Vector2f (-m_size, m_size);
-			m_particles[index]->vertices[3].position = m_emitter + sf::Vector2f (m_size, m_size);
+			m_particles[index]->vertices[0].position = m_vertices[index].position + sf::Vector2f (-m_size, -m_size);
+			m_particles[index]->vertices[1].position = m_vertices[index].position + sf::Vector2f (m_size, -m_size);
+			m_particles[index]->vertices[2].position = m_vertices[index].position + sf::Vector2f (-m_size, m_size);
+			m_particles[index]->vertices[3].position = m_vertices[index].position + sf::Vector2f (m_size, m_size);
 		}
 	}
 
@@ -139,8 +139,10 @@ public:
 			p.lifetime -= elapsed;
 
 			// if the particle is dead, respawn it
-			if (p.lifetime <= sf::Time::Zero)
+			if (p.lifetime <= sf::Time::Zero) {
 				resetParticle (i);
+				return;
+			}
 
 			// update the position of the corresponding vertex
 			float prevVelocity = p.velocity.y;
@@ -159,7 +161,7 @@ public:
 				m_particles[i]->vertices[1].position = m_pos + sf::Vector2f (m_size, -m_size);
 				m_particles[i]->vertices[2].position = m_pos + sf::Vector2f (-m_size, m_size);
 				m_particles[i]->vertices[3].position = m_pos + sf::Vector2f (m_size, m_size);
-			}			
+			}
 		}
 	}
 
