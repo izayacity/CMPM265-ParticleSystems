@@ -88,8 +88,8 @@ public:
 		m_emitStart (0.f),
 		m_speed (50.f),
 		m_size (0.f) {
-		//textureLoaded = m_texture.loadFromFile ("static/image/smokeparticle.png") ? true : false;
-		textureLoaded = false;
+		textureLoaded = m_texture.loadFromFile ("static/image/smokeparticle.png") ? true : false;
+		//textureLoaded = false;
 	}
 
 	~ParticleSystem () {
@@ -190,7 +190,7 @@ public:
 				m_count++;
 				diff--;
 			} else {
-				throw std::runtime_error ("Failed to add particle");				
+				throw std::runtime_error ("Failed to add particle");
 			}
 		}
 	}
@@ -213,9 +213,8 @@ public:
 
 	// initialize and build the sprite/quad vertices around the particle
 	void init () {
-		float width = m_texture.getSize ().x / 2.f < m_size ? m_texture.getSize ().x / 2.f : m_size;
-		float height = m_texture.getSize ().y / 2.f < m_size ? m_texture.getSize ().y / 2.f : m_size;
-		sf::Vector2f t_pos = sf::Vector2f (width, height);
+		float width = m_texture.getSize ().x;
+		float height = m_texture.getSize ().y;
 		Particle* particle;
 
 		for (int i = 0; i < COUNT; ++i) {
@@ -223,10 +222,10 @@ public:
 			m_particles.push_back (ParticlePtr(particle));
 			m_particles[i]->vertices.setPrimitiveType (sf::PrimitiveType::Quads);
 			m_particles[i]->vertices.resize (4);
-			m_particles[i]->vertices[0].texCoords = t_pos + sf::Vector2f (-width, -height);
-			m_particles[i]->vertices[1].texCoords = t_pos + sf::Vector2f (width, -height);
-			m_particles[i]->vertices[2].texCoords = t_pos + sf::Vector2f (-width, height);
-			m_particles[i]->vertices[3].texCoords = t_pos + sf::Vector2f (width, height);
+			m_particles[i]->vertices[0].texCoords = sf::Vector2f (0, 0);
+			m_particles[i]->vertices[1].texCoords = sf::Vector2f (width, 0);
+			m_particles[i]->vertices[2].texCoords = sf::Vector2f (width, height);
+			m_particles[i]->vertices[3].texCoords = sf::Vector2f (0, height);
 		}
 	}
 };
