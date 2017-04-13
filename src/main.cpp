@@ -48,9 +48,9 @@ int main () {
 	particles2.setSpeed (50.f);
 	particles2.setGravity (100.f);
 	particles2.setSize (5.f);
-	particles2.init ();
-	particles1.setSize (2.f);
-	particles1.init ();
+	particles2.init (2);
+	particles1.setSize (10.f);
+	particles1.init (1);
 
 	// run the main loop
 	while (window1.isOpen ()) {

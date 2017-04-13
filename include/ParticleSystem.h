@@ -17,7 +17,8 @@ private:
 	};
 	typedef std::shared_ptr<Particle> ParticlePtr;
 	typedef std::vector<ParticlePtr>::iterator ParticleIterator;
-	std::vector<ParticlePtr> m_particles;	
+	std::vector<ParticlePtr> m_particles;
+	std::map<int, sf::Texture> tex_map;
 
 	// default initial count of particles
 	const int COUNT = 100;
@@ -98,10 +99,7 @@ public:
 		m_emitAngle (360),
 		m_emitStart (0.f),
 		m_speed (50.f),
-		m_size (0.f) {
-		m_texture.loadFromFile ("static/image/smokeparticle.png");
-		t_width = m_texture.getSize ().x;
-		t_height = m_texture.getSize ().y;
+		m_size (0.f) {		
 	}
 
 	~ParticleSystem () {
@@ -222,11 +220,21 @@ public:
 		m_count = m_particles.size ();
 	}
 
-	// initialize and build the sprite/quad vertices around the particle
-	void init () {
+	// initialize texture map and build the sprite/quad vertices around the particle
+	void init (int id) {		
+		sf::Texture temp;
+		assert (temp.loadFromFile ("static/image/smokeparticle.png"));
+		tex_map[1] = temp;
+		assert (temp.loadFromFile ("static/image/dollar.png"));
+		tex_map[2] = temp;
+		m_texture = tex_map[id];
+		m_texture.setSmooth (true);
+		t_width = m_texture.getSize ().x;
+		t_height = m_texture.getSize ().y;
+
 		for (int i = 0; i < m_count; ++i) {
 			Particle* particle = new Particle ();
-			m_particles.push_back (ParticlePtr(particle));
+			m_particles.push_back (ParticlePtr (particle));
 			initTex (particle);
 		}
 	}
