@@ -1,6 +1,6 @@
 ﻿  main.cpp
-d:\_repos\cmpm265\cmpm265-particlesystems\include\particlesystem.h(232): warning C4244: '=': conversion from 'unsigned int' to 'float', possible loss of data
-d:\_repos\cmpm265\cmpm265-particlesystems\include\particlesystem.h(233): warning C4244: '=': conversion from 'unsigned int' to 'float', possible loss of data
-d:\_repos\cmpm265\cmpm265-particlesystems\include\particlesystem.h(235): warning C4018: '<': signed/unsigned mismatch
+d:\_repos\cmpm265\cmpm265-particlesystems\include\particlesystem.h(248): warning C4244: '=': conversion from 'unsigned int' to 'float', possible loss of data
+d:\_repos\cmpm265\cmpm265-particlesystems\include\particlesystem.h(249): warning C4244: '=': conversion from 'unsigned int' to 'float', possible loss of data
+d:\_repos\cmpm265\cmpm265-particlesystems\include\particlesystem.h(251): warning C4018: '<': signed/unsigned mismatch
   CMPM265-ParticleSystems.vcxproj -> D:\_repos\CMPM265\CMPM265-ParticleSystems\Debug\CMPM265-ParticleSystems.exe
   CMPM265-ParticleSystems.vcxproj -> D:\_repos\CMPM265\CMPM265-ParticleSystems\Debug\CMPM265-ParticleSystems.pdb (Full PDB)

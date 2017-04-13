@@ -4,6 +4,7 @@
 #include <ctime>
 #include <cstdlib>
 #include "../include/ParticleSystem.h"
+#include "../include/Repeller.h"
 
 int main () {
 	const int gameWidth = 800;
@@ -16,6 +17,7 @@ int main () {
 	// create the particle system
 	ParticleSystem particles1;    // particle sys 1: emitter changed by mouse cursor
 	ParticleSystem particles2;    // particle sys 2: emitter at [gameWidth / 2.f, 0.f], angle [120, 240], gravity = 100, textured
+	Repeller repeller;
 
 	// create a clock to track the elapsed time
 	sf::Clock clock;
@@ -40,7 +42,7 @@ int main () {
 	countText.setString ("Particle count (Use UP/DOWN key to change): " + countStr);
 	countText.setPosition (20, gameHeight - 30);
 	
-	// init particle sys 2
+	// init particle sys
 	particles2.setEmitter (sf::Vector2f (gameWidth / 2.f, 10.f));
 	particles2.setEmitAngle (120);
 	particles2.setEmitStart (120.f);
@@ -51,6 +53,10 @@ int main () {
 	particles2.init (2);
 	particles1.setSize (10.f);
 	particles1.init (1);
+
+	// init repeller
+	repeller.setPosition (sf::Vector2f(gameWidth / 2.f, gameHeight / 2.f));
+	repeller.setStrength (1000000.f);
 
 	// run the main loop
 	while (window1.isOpen ()) {
@@ -70,18 +76,21 @@ int main () {
 				countText.setString ("Particle count (Use UP/DOWN key to change): " + countStr);
 			}
 		}
-
+	
 		// set the emitter of particle sys 1 by mouse cursors
 		sf::Vector2i mouse = sf::Mouse::getPosition (window1);
 		particles1.setEmitter (window1.mapPixelToCoords (mouse));				
 
-		// update the particle system by time
+		// update the particle system by time and apply force from repeller to particle systems
 		sf::Time elapsed = clock.restart ();
+		repeller.update (particles1, elapsed);
+		repeller.update (particles2, elapsed);
 		particles1.update (elapsed);
 		particles2.update (elapsed);
 
 		// render it
 		window1.clear ();
+		window1.draw (repeller);
 		window1.draw (particles2);
 		window1.draw (particles1);
 		window1.draw (textField);

@@ -1,22 +1,22 @@
 #pragma once
 #include <SFML/Graphics.hpp>
-#include <iostream>
 #include <cassert>
 #include <vector>
 #include <memory>
+#include <iostream>
+
+struct Particle {
+	sf::Vector2f velocity;
+	sf::Time lifetime;
+	sf::VertexArray vertices;    // particle origin center vertex and surrounding 4 vertices as a sprite to load texture
+	sf::VertexArray history;     // trail vertices
+	std::vector<sf::Time> h_time;    // history life time of trail vertices
+	Particle () : lifetime (sf::seconds (3)), vertices (sf::Points, 5) {}
+};
+typedef std::shared_ptr<Particle> ParticlePtr;
 
 class ParticleSystem : public sf::Drawable, public sf::Transformable {
 private:
-	struct Particle {
-		sf::Vector2f velocity;
-		sf::Time lifetime;
-		sf::VertexArray vertices;    // particle origin center vertex and surrounding 4 vertices as a sprite to load texture
-		sf::VertexArray history;     // trail vertices
-		std::vector<sf::Time> h_time;    // history life time of trail vertices
-		Particle () : lifetime (sf::seconds (3)), vertices (sf::Points, 5) {}
-	};
-	typedef std::shared_ptr<Particle> ParticlePtr;
-	typedef std::vector<ParticlePtr>::iterator ParticleIterator;
 	std::vector<ParticlePtr> m_particles;
 	std::map<int, sf::Texture> tex_map;
 
@@ -63,6 +63,7 @@ private:
 		m_particles[index]->vertices[4].position = m_emitter + sf::Vector2f (m_size, m_size);		
 	}
 
+	// Move the particle after respawning each time by the initial velocity and angle
 	void resetParticle (Particle* particle) {
 		// give a random velocity and lifetime to the particle
 		float angle = (std::rand () % m_emitAngle) * 3.14f / 180.f + m_emitStart;
@@ -78,6 +79,16 @@ private:
 		particle->vertices[3].position = m_emitter + sf::Vector2f (-m_size, m_size);
 		particle->vertices[4].position = m_emitter + sf::Vector2f (m_size, m_size);
 	}
+
+	// initialize texture of a particle
+	void initTex (Particle* p) {
+		p->vertices.setPrimitiveType (sf::PrimitiveType::Quads);
+		p->vertices.resize (5);
+		p->vertices[1].texCoords = sf::Vector2f (0, 0);
+		p->vertices[2].texCoords = sf::Vector2f (t_width, 0);
+		p->vertices[3].texCoords = sf::Vector2f (t_width, t_height);
+		p->vertices[4].texCoords = sf::Vector2f (0, t_height);
+	}	
 
 	// Apply the transform and draw the vertext array
 	virtual void draw (sf::RenderTarget& target, sf::RenderStates states) const {
@@ -179,6 +190,11 @@ public:
 		return m_count;
 	}
 
+	// get the emitter positin of particles
+	sf::Vector2f getEmitter () {
+		return m_emitter;
+	}
+
 	// add the count of particles by 100 each time
 	void addCount () {
 		int diff = 100;
@@ -239,12 +255,12 @@ public:
 		}
 	}
 
-	void initTex (Particle* p) {
-		p->vertices.setPrimitiveType (sf::PrimitiveType::Quads);
-		p->vertices.resize (5);
-		p->vertices[1].texCoords = sf::Vector2f (0, 0);
-		p->vertices[2].texCoords = sf::Vector2f (t_width, 0);
-		p->vertices[3].texCoords = sf::Vector2f (t_width, t_height);
-		p->vertices[4].texCoords = sf::Vector2f (0, t_height);
+	// apply force to particles
+	void applyForce (float force, sf::Time elapsed) {
+		std::cout << "Force: " << force * elapsed.asSeconds () << std::endl;
+		for (size_t i = 0; i < m_particles.size (); i++) {
+			m_particles[i]->velocity.x += force * elapsed.asSeconds ();
+			m_particles[i]->velocity.y += force * elapsed.asSeconds ();
+		}
 	}
 };
