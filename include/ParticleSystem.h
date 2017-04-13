@@ -11,7 +11,7 @@ private:
 		sf::Vector2f velocity;
 		sf::Time lifetime;
 		sf::VertexArray vertices;    // particle origin center vertex and surrounding 4 vertices as a sprite to load texture
-		sf::Vector2f prev_pos[5];
+		sf::VertexArray history;
 		Particle () : lifetime (sf::seconds (3)), vertices (sf::Points, 5) {}
 	};
 	typedef std::shared_ptr<Particle> ParticlePtr;
@@ -19,7 +19,7 @@ private:
 	typedef std::vector<ParticlePtr>::iterator ParticleIterator;
 	
 	// default initial count of particles
-	const int COUNT = 1000;
+	const int COUNT = 100;
 	// count of particles
 	unsigned int m_count;
 	// gravity
@@ -38,6 +38,10 @@ private:
 	sf::Vector2f m_emitter;
 	// render states to load texture
 	sf::Texture m_texture;
+	// pixel width of texture image
+	float t_width;
+	// pixel height of texture image
+	float t_height;
 
 	// Move the particle after respawning each time by the initial velocity and angle
 	void resetParticle (std::size_t index) {
@@ -50,11 +54,28 @@ private:
 		// reset the position of the corresponding vertex
 		m_particles[index]->vertices[0].position = m_emitter;
 		m_particles[index]->vertices[0].color = sf::Color::Color (std::rand () % 255, std::rand () % 255, std::rand () % 255, std::rand () % 255);
-
+		
 		m_particles[index]->vertices[1].position = m_emitter + sf::Vector2f (-m_size, -m_size);
 		m_particles[index]->vertices[2].position = m_emitter + sf::Vector2f (m_size, -m_size);
 		m_particles[index]->vertices[3].position = m_emitter + sf::Vector2f (-m_size, m_size);
-		m_particles[index]->vertices[4].position = m_emitter + sf::Vector2f (m_size, m_size);
+		m_particles[index]->vertices[4].position = m_emitter + sf::Vector2f (m_size, m_size);		
+	}
+
+	void resetParticle (Particle* particle) {
+		// give a random velocity and lifetime to the particle
+		float angle = (std::rand () % m_emitAngle) * 3.14f / 180.f + m_emitStart;
+		float speed = (std::rand () % 50) + m_speed;
+		particle->velocity = sf::Vector2f (std::cos (angle) * speed, std::sin (angle) * speed);
+		particle->lifetime = sf::milliseconds ((std::rand () % (m_lifetime.asMilliseconds () / 2)) + m_lifetime.asMilliseconds () / 2);
+
+		// reset the position of the corresponding vertex
+		particle->vertices[0].position = m_emitter;
+		particle->vertices[0].color = sf::Color::Color (std::rand () % 255, std::rand () % 255, std::rand () % 255, std::rand () % 255);
+
+		particle->vertices[1].position = m_emitter + sf::Vector2f (-m_size, -m_size);
+		particle->vertices[2].position = m_emitter + sf::Vector2f (m_size, -m_size);
+		particle->vertices[3].position = m_emitter + sf::Vector2f (-m_size, m_size);
+		particle->vertices[4].position = m_emitter + sf::Vector2f (m_size, m_size);
 	}
 
 	// Apply the transform and draw the vertext array
@@ -71,13 +92,15 @@ public:
 	ParticleSystem () :
 		m_lifetime (sf::seconds (3)),
 		m_emitter (0, 0),
-		m_count (1000),
+		m_count (COUNT),
 		m_gravity (0.f),
 		m_emitAngle (360),
 		m_emitStart (0.f),
 		m_speed (50.f),
 		m_size (0.f) {
 		m_texture.loadFromFile ("static/image/smokeparticle.png");
+		t_width = m_texture.getSize ().x;
+		t_height = m_texture.getSize ().y;
 	}
 
 	~ParticleSystem () {
@@ -159,7 +182,6 @@ public:
 	// add the count of particles by 100 each time
 	void addCount () {
 		int diff = 100;
-		Particle* particle;
 
 		if (m_count >= UINT_MAX - 1) {
 			diff = 0;
@@ -169,13 +191,14 @@ public:
 
 		// update particles and vertice
 		while (diff > 0) {
-			particle = new Particle ();
+			Particle* particle = new Particle ();
 
 			if (particle != nullptr) {
+				initTex (particle);
+				resetParticle (particle);
 				m_particles.push_back (ParticlePtr(particle));
 				m_count++;
-				diff--;
-				resetParticle (std::size_t(m_count - 1));
+				diff--;				
 			} else {
 				throw std::runtime_error ("Failed to add particle");
 			}
@@ -200,20 +223,19 @@ public:
 
 	// initialize and build the sprite/quad vertices around the particle
 	void init () {
-		float width = m_texture.getSize ().x;
-		float height = m_texture.getSize ().y;
-		Particle* particle;
-
-		for (int i = 0; i < COUNT; ++i) {
-			particle = new Particle ();
+		for (int i = 0; i < m_count; ++i) {
+			Particle* particle = new Particle ();
 			m_particles.push_back (ParticlePtr(particle));
-			m_particles[i]->vertices.setPrimitiveType (sf::PrimitiveType::Quads);
-			m_particles[i]->vertices.resize (5);
-			m_particles[i]->vertices[1].texCoords = sf::Vector2f (0, 0);
-			m_particles[i]->vertices[2].texCoords = sf::Vector2f (width, 0);
-			m_particles[i]->vertices[3].texCoords = sf::Vector2f (width, height);
-			m_particles[i]->vertices[4].texCoords = sf::Vector2f (0, height);
-			m_particles[i]->lifetime = sf::milliseconds ((std::rand () % (m_lifetime.asMilliseconds () / 2)) + m_lifetime.asMilliseconds () / 2);
+			initTex (particle);
 		}
+	}
+
+	void initTex (Particle* p) {
+		p->vertices.setPrimitiveType (sf::PrimitiveType::Quads);
+		p->vertices.resize (5);
+		p->vertices[1].texCoords = sf::Vector2f (0, 0);
+		p->vertices[2].texCoords = sf::Vector2f (t_width, 0);
+		p->vertices[3].texCoords = sf::Vector2f (t_width, t_height);
+		p->vertices[4].texCoords = sf::Vector2f (0, t_height);
 	}
 };
