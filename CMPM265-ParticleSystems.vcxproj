@@ -151,6 +151,7 @@
     <ClCompile Include="src\main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="include\Particle.h" />
     <ClInclude Include="include\ParticleSystem.h" />
     <ClInclude Include="include\Repeller.h" />
   </ItemGroup>

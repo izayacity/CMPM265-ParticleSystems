@@ -4,16 +4,8 @@
 #include <vector>
 #include <memory>
 #include <iostream>
-
-struct Particle {
-	sf::Vector2f velocity;
-	sf::Time lifetime;
-	sf::VertexArray vertices;    // particle origin center vertex and surrounding 4 vertices as a sprite to load texture
-	sf::VertexArray history;     // trail vertices
-	std::vector<sf::Time> h_time;    // history life time of trail vertices
-	Particle () : lifetime (sf::seconds (3)), vertices (sf::Points, 5) {}
-};
-typedef std::shared_ptr<Particle> ParticlePtr;
+#include "Particle.h"
+#include "Repeller.h"
 
 class ParticleSystem : public sf::Drawable, public sf::Transformable {
 private:
@@ -46,25 +38,7 @@ private:
 	float t_height;
 
 	// Move the particle after respawning each time by the initial velocity and angle
-	void resetParticle (std::size_t index) {
-		// give a random velocity and lifetime to the particle
-		float angle = (std::rand () % m_emitAngle) * 3.14f / 180.f + m_emitStart;
-		float speed = (std::rand () % 50) + m_speed;
-		m_particles[index]->velocity = sf::Vector2f (std::cos (angle) * speed, std::sin (angle) * speed);
-		m_particles[index]->lifetime = sf::milliseconds ((std::rand () % (m_lifetime.asMilliseconds () / 2)) + m_lifetime.asMilliseconds () / 2);
-		m_particles[index]->history.resize (0);
-		m_particles[index]->h_time.clear ();
-
-		// reset the position of the corresponding vertex
-		m_particles[index]->vertices[0].position = m_emitter;
-		m_particles[index]->vertices[1].position = m_emitter + sf::Vector2f (-m_size, -m_size);
-		m_particles[index]->vertices[2].position = m_emitter + sf::Vector2f (m_size, -m_size);
-		m_particles[index]->vertices[3].position = m_emitter + sf::Vector2f (-m_size, m_size);
-		m_particles[index]->vertices[4].position = m_emitter + sf::Vector2f (m_size, m_size);		
-	}
-
-	// Move the particle after respawning each time by the initial velocity and angle
-	void resetParticle (Particle* particle) {
+	void resetParticle (ParticlePtr particle) {
 		// give a random velocity and lifetime to the particle
 		float angle = (std::rand () % m_emitAngle) * 3.14f / 180.f + m_emitStart;
 		float speed = (std::rand () % 50) + m_speed;
@@ -81,7 +55,7 @@ private:
 	}
 
 	// initialize texture of a particle
-	void initTex (Particle* p) {
+	void initTex (ParticlePtr p) {
 		p->vertices.setPrimitiveType (sf::PrimitiveType::Quads);
 		p->vertices.resize (5);
 		p->vertices[1].texCoords = sf::Vector2f (0, 0);
@@ -95,9 +69,9 @@ private:
 		states.transform *= getTransform ();
 		states.texture = NULL;
 		
-		for (std::size_t i = 0; i < m_particles.size (); ++i) {
-			target.draw (m_particles[i]->vertices, &m_texture);
-			target.draw (m_particles[i]->history, states);
+		for (auto p : m_particles) {
+			target.draw (p->vertices, &m_texture);
+			target.draw (p->history, states);
 		}
 	}
 
@@ -110,7 +84,7 @@ public:
 		m_emitAngle (360),
 		m_emitStart (0.f),
 		m_speed (50.f),
-		m_size (0.f) {		
+		m_size (0.f) {
 	}
 
 	~ParticleSystem () {
@@ -154,34 +128,34 @@ public:
 
 	// Update the lifetime, position, color, etc of the particles
 	void update (sf::Time elapsed) {
-		for (std::size_t i = 0; i < m_particles.size (); ++i) {
-			m_particles[i]->lifetime -= elapsed;
+		for (auto p : m_particles) {
+			p->lifetime -= elapsed;
 
 			// if the particle is dead, respawn it
-			if (m_particles[i]->lifetime <= sf::Time::Zero) {
-				resetParticle (i);
+			if (p->lifetime <= sf::Time::Zero) {
+				resetParticle (p);
 				return;
 			}
 
 			// store the history positions and life time of a particle
-			float prevVelocity = m_particles[i]->velocity.y;
+			float prevVelocity = p->velocity.y;
 			sf::Vertex *vertex = new sf::Vertex ();
 			vertex->color = sf::Color::Color (std::rand () % 255, std::rand () % 255, std::rand () % 255, std::rand () % 255);
-			vertex->position = m_particles[i]->vertices[0].position;
-			m_particles[i]->history.append (*vertex);
-			m_particles[i]->h_time.push_back (m_particles[i]->lifetime);
+			vertex->position = p->vertices[0].position;
+			p->history.append (*vertex);
+			p->h_time.push_back (p->lifetime);
 
 			// update the position of the corresponding vertex
-			m_particles[i]->velocity.y += m_gravity * elapsed.asSeconds ();
-			m_particles[i]->vertices[0].position.x += m_particles[i]->velocity.x * elapsed.asSeconds ();
-			m_particles[i]->vertices[0].position.y += (m_particles[i]->velocity.y + prevVelocity) / 2 * elapsed.asSeconds ();
+			p->velocity.y += m_gravity * elapsed.asSeconds ();
+			p->vertices[0].position.x += p->velocity.x * elapsed.asSeconds ();
+			p->vertices[0].position.y += (p->velocity.y + prevVelocity) / 2 * elapsed.asSeconds ();
 			
 			// update surrending vertices of shape
-			sf::Vector2f m_pos = m_particles[i]->vertices[0].position;
-			m_particles[i]->vertices[1].position = m_pos + sf::Vector2f (-m_size, -m_size);
-			m_particles[i]->vertices[2].position = m_pos + sf::Vector2f (m_size, -m_size);
-			m_particles[i]->vertices[3].position = m_pos + sf::Vector2f (-m_size, m_size);
-			m_particles[i]->vertices[4].position = m_pos + sf::Vector2f (m_size, m_size);
+			sf::Vector2f m_pos = p->vertices[0].position;
+			p->vertices[1].position = m_pos + sf::Vector2f (-m_size, -m_size);
+			p->vertices[2].position = m_pos + sf::Vector2f (m_size, -m_size);
+			p->vertices[3].position = m_pos + sf::Vector2f (-m_size, m_size);
+			p->vertices[4].position = m_pos + sf::Vector2f (m_size, m_size);
 		}
 	}
 
@@ -207,12 +181,12 @@ public:
 
 		// update particles and vertice
 		while (diff > 0) {
-			Particle* particle = new Particle ();
+			ParticlePtr particle = new Particle ();
 
 			if (particle != nullptr) {
 				initTex (particle);
-				resetParticle (particle);
-				m_particles.push_back (ParticlePtr(particle));
+				resetParticle (ParticlePtr(particle));
+				m_particles.push_back (ParticlePtr (particle));
 				m_count++;
 				diff--;				
 			} else {
@@ -245,22 +219,21 @@ public:
 		tex_map[2] = temp;
 		m_texture = tex_map[id];
 		m_texture.setSmooth (true);
-		t_width = m_texture.getSize ().x;
-		t_height = m_texture.getSize ().y;
+		t_width = m_texture.getSize ().x + 0.f;
+		t_height = m_texture.getSize ().y + 0.f;
 
 		for (int i = 0; i < m_count; ++i) {
-			Particle* particle = new Particle ();
-			m_particles.push_back (ParticlePtr (particle));
+			ParticlePtr particle = new Particle ();
+			m_particles.push_back (ParticlePtr(particle));
 			initTex (particle);
 		}
 	}
 
 	// apply force to particles
-	void applyForce (float force, sf::Time elapsed) {
-		std::cout << "Force: " << force * elapsed.asSeconds () << std::endl;
-		for (size_t i = 0; i < m_particles.size (); i++) {
-			m_particles[i]->velocity.x += force * elapsed.asSeconds ();
-			m_particles[i]->velocity.y += force * elapsed.asSeconds ();
+	void applyRepeller (Repeller repeller, sf::Time elapsed) {
+		for (auto p : m_particles) {
+			sf::Vector2f force = repeller.repel (p);
+			p->velocity += force * elapsed.asSeconds ();
 		}
-	}
+	}	
 };

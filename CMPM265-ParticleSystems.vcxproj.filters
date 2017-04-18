@@ -26,6 +26,9 @@
     <ClInclude Include="include\Repeller.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\Particle.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Font Include="static\font\HelveticaNeue Light.ttf">
